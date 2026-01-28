@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Jagota WhatsApp Chat</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #0b141a;
+            --panel: #111b21;
+            --sidebar: #111b21;
+            --header: #202c33;
+            --border: #22323b;
+            --search-bg: #202c33;
+
+            --text: #e9edef;
+            --muted: #93a4ad;
+            --text-secondary: #667781;
+
+            --in: #202c33;
+            --out: #005c4b;
+            --out-hover: #006b5a;
+
+            --accent: #00a884;
+            --accent-hover: #00927a;
+            --online: #00d448;
+            --sidebar-hover: #182028;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100dvh;
+            background: var(--bg);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+        }
+
+        /* WhatsApp Web container */
+        .shell {
+            width: min(1400px, 100%);
+            height: min(850px, 100dvh);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 10px 16px;
+            background: var(--header);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .sidebar-icons {
+            display: flex;
+            gap: 16px;
+            color: var(--muted);
+        }
+
+        .icon {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .icon:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .search-bar {
+            padding: 8px 12px;
+            background: var(--search-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .search-input::placeholder {
+            color: var(--muted);
+        }
+
+        .contacts {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .contact-item:hover {
+            background: var(--sidebar-hover);
+        }
+
+        .contact-item.active {
+            background: var(--sidebar-hover);
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-last-message {
+            font-size: 14px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .contact-time {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .unread-count {
+            background: var(--accent);
+            color: #111b21;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Chat panel */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel);
+        }
+
+        /* Chat Header */
+        .topbar {
+            padding: 10px 16px;
+            background: var(--header);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            height: 60px;
+        }
+
+        .contact-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .who {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .name {
+            font-weight: 400;
+            font-size: 16px;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: 13px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .online-status {
+            color: var(--online);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--online);
+            border-radius: 50%;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            color: var(--muted);
+            position: relative;
+        }
+
+        .menu-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 140px;
+            margin-top: 8px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.15s;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .03);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 650;
+            font-size: 12px;
+        }
+
+        .btn.primary {
+            border: none;
+            background: var(--accent);
+            color: #062a24;
+        }
+
+        /* Chat body with plain background */
+        .body {
+            flex: 1;
+            overflow: auto;
+            padding: 14px 12px;
+            background: var(--bg);
+        }
+
+        /* Day separator (optional) */
+        .day {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .day span {
+            background: rgba(17, 27, 33, .75);
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+        }
+
+        /* Rows and bubbles */
+        .row {
+            display: flex;
+            margin: 2px 0;
+        }
+
+        .row.left {
+            justify-content: flex-start;
+        }
+
+        .row.right {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            position: relative;
+            max-width: min(720px, 65%);
+            padding: 6px 4px 6px 6px;
+            border-radius: 7px;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, .13);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.3;
+            font-size: 14px;
+            margin-bottom: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 50%;
+        }
+
+        .bubble.in {
+            background: var(--in);
+            color: #e9edef;
+        }
+
+        .bubble.out {
+            background: var(--out);
+            color: #e9edef;
+        }
+
+        .bubble-content {
+            padding-bottom: 10px;
+        }
+
+        .message-time {
+            position: absolute;
+            bottom: 2px;
+            right: 6px;
+            font-size: 11px;
+            color: rgba(241, 241, 242, 0.63);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .message-status {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Small system tag (only for SYSTEM messages) */
+        .sys-tag {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 10px;
+            color: rgba(255, 255, 255, .75);
+            margin-bottom: 4px;
+        }
+
+        .sys-tag .pill {
+            /* No styling - just plain text */
+        }
+
+        .sys-tag .tag-right {
+            margin-left: auto;
+            border: 1px solid rgba(255, 255, 255, .18);
+            background: rgba(255, 255, 255, .06);
+            padding: 1px 4px;
+            border-radius: 999px;
+            font-size: 9px;
+        }
+
+        /* Composer */
+        .composer {
+            padding: 10px;
+            border-top: 1px solid var(--border);
+            background: rgba(17, 27, 33, .9);
+            backdrop-filter: blur(8px);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 10px 12px;
+        }
+
+        .input input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .shell {
+                width: 100%;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .chat-panel {
+                flex: 1;
+            }
+
+            .bubble {
+                max-width: 85%;
+            }
+
+            .topbar {
+                padding: 10px 16px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .bubble {
+                max-width: 90%;
+            }
+
+            .contact-header .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-profile">
+                    <div class="avatar">JB</div>
+                </div>
+                <div class="sidebar-icons">
+                    <div class="icon">⭮</div>
+                    <div class="icon">💬</div>
+                    <div class="icon">⋮</div>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <input class="search-input" placeholder="Search or start new chat" />
+            </div>
+
+            <div class="contacts">
+                <div class="contact-item active" id="currentContact">
+                    <div class="avatar" id="contactAvatar"></div>
+                    <div class="contact-info">
+                        <div class="contact-name" id="sidebarContactName"></div>
+                        <div class="contact-last-message"></div>
+                    </div>
+                    <div class="contact-meta">
+                        <div class="contact-time" id="sidebarContactTime"></div>
+                        <div class="unread-count">3</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="topbar">
+                <div class="contact-header">
+                    <div class="avatar" id="headerAvatar"></div>
+                    <div class="who">
+                        <div class="name" id="custName"></div>
+                        <div class="sub">
+                            <span id="lastSeenText">last seen today at 12:25</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <div class="icon" title="Search">🔍</div>
+                    <div class="icon" id="btnRefresh" title="Refresh">⭮</div>
+                    <div class="menu-dropdown">
+                        <div class="icon" id="menuBtn" title="Menu">⋮</div>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div class="menu-item" onclick="showProfile()">Profile</div>
+                            <div class="menu-item" onclick="showSettings()">Settings</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="body" id="chatBody"></div>
+
+            <div class="composer">
+                <div class="input">
+                    <input id="msgInput" type="text" placeholder="Type a message" />
+                </div>
+                <button class="btn primary" id="sendBtn">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DROPDOWN FUNCTIONALITY =====
+        $(document).ready(function () {
+            $('#menuBtn').on('click', function (e) {
+                e.stopPropagation();
+                $('#dropdownMenu').toggleClass('show');
+                console.log('Menu clicked, dropdown toggled');
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function () {
+                $('#dropdownMenu').removeClass('show');
+            });
+
+            // Prevent dropdown from closing when clicking inside
+            $('#dropdownMenu').on('click', function (e) {
+                e.stopPropagation();
+            });
+        });
+
+        function showProfile() {
+            $('#dropdownMenu').removeClass('show');
+            alert('Profile functionality - Company: Tech Solutions Inc.\\nUser: John Doe\\nPosition: Senior Developer\\nEmail: john.doe@company.com');
+        }
+
+        function showSettings() {
+            $('#dropdownMenu').removeClass('show');
+            alert('Settings functionality coming soon!');
+        }
+
+        // ===== CONFIG =====
+        const BASE_URL = "https://jnodeapi-staging.jagota.com";
+
+        // Extract phone number from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const TO_NUMBER = '+' + urlParams.get('mobile')
+
+        let CUSTOMER_NAME = ""; // Will be set dynamically from API response
+
+        const POST_OUTBOUND_URL = `${BASE_URL}/v1/public/whatsapp/outbound`;
+        const GET_MESSAGES_URL = `${BASE_URL}/v1/public/whatsapp/chat?mobile=${TO_NUMBER}`;
+
+
+        // ===== HELPERS =====
+        $("#profileBtn").on("click", function () {
+            $("#dropdownMenu").removeClass("show");
+            $("#profileModal").addClass("show");
+        });
+
+        // Close profile modal
+        $("#closeModal").on("click", function () {
+            $("#profileModal").removeClass("show");
+        });
+
+        // Close modal when clicking outside
+        $("#profileModal").on("click", function (e) {
+            if (e.target === this) {
+                $(this).removeClass("show");
+            }
+        });
+
+        // Settings button (placeholder)
+        $("#settingBtn").on("click", function () {
+            $("#dropdownMenu").removeClass("show");
+            alert("Settings functionality coming soon!");
+        });
+
+        // ===== EXISTING FUNCTIONALITY =====
+        function esc(s) {
+            return String(s ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        // You asked: based on inbound/outbound change direction.
+        // - inbound => left
+        // - outbound/template => right
+        function getSide(m) {
+            return (String(m.messageDirection || "").toLowerCase() === "inbound") ? "left" : "right";
+        }
+        function getBubbleClass(m) {
+            return (String(m.messageDirection || "").toLowerCase() === "inbound") ? "in" : "out";
+        }
+
+        // Show system tags with direction on left, SYSTEM always on right
+        function systemTag(m) {
+            const by = String(m.createdBy || "").toUpperCase();
+            if (by !== "SYSTEM") return "";
+            const direction = m.direction || m.messageDirection || "SYSTEM";
+
+            return `<div class="sys-tag"><span class="pill">${esc(direction)}</span><span class="tag-right">SYSTEM</span></div>`;
+        }
+
+        function render(rows) {
+            const $body = $("#chatBody").empty();
+            let lastDay = null;
+
+            rows.forEach(m => {
+                // Extract just the date part from the timestamp
+                const fullDate = m.createdOn || "";
+                const day = fullDate.split(' ')[0] || ""; // Gets "26-Jan-2026" from "26-Jan-2026 05:12:18 PM"
+                if (day && day !== lastDay) {
+                    $body.append(`<div class="day"><span>${esc(day)}</span></div>`);
+                    lastDay = day;
+                }
+
+                const side = getSide(m);
+                const bubbleCls = getBubbleClass(m);
+                
+                // Extract and format time from createdOn
+                let messageTime = ""; // fallback
+                if (m.createdOn) {
+                    const timeFormatted = m.createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
+                    if (timeFormatted) {
+                        messageTime = timeFormatted;
+                    }
+                }
+
+                $body.append(`
+        <div class="row ${side}">
+          <div class="bubble ${bubbleCls}">
+            ${systemTag(m)}
+            <div class="bubble-content">${esc(m.body)}</div>
+            <div class="message-time">
+              <span>${esc(messageTime)}</span>
+              ${side === 'right' ? '<span class="message-status">✓✓</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `);
+            });
+
+            // Update message count in sidebar
+            $(".unread-count").text(rows.length);
+            $body.scrollTop($body[0].scrollHeight);
+        }
+
+        function loadMessages() {
+            $.ajax({
+                url: GET_MESSAGES_URL,
+                method: "GET",
+                dataType: "json",
+                success: function (resp) {
+                    const rows = resp.data || resp.result || resp || [];
+                    
+                    // Extract customer name from first non-null profileName
+                    if (!CUSTOMER_NAME && rows.length > 0) {
+                        for (const message of rows) {
+                            if (message.profileName && message.profileName.trim()) {
+                                CUSTOMER_NAME = message.profileName.trim();
+                                // Update UI with the customer name
+                                $("#custName").text(CUSTOMER_NAME);
+                                $("#sidebarContactName").text(CUSTOMER_NAME);
+                                
+                                // Update avatars with first letter of customer name
+                                const firstLetter = CUSTOMER_NAME.charAt(0).toUpperCase();
+                                $("#contactAvatar").text(firstLetter);
+                                $("#headerAvatar").text(firstLetter);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Update sidebar contact time from most recent message
+                    if (rows.length > 0) {
+                        const mostRecentMessage = rows[rows.length - 1];
+                        if (mostRecentMessage.createdOn) {
+                            const timeFormatted = mostRecentMessage.createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
+                            if (timeFormatted) {
+                                $("#sidebarContactTime").text(timeFormatted);
+                            }
+                        }
+                    }
+                    
+                    // Extract last seen time from most recent inbound message
+                    if (rows.length > 0) {
+                        // Find the most recent inbound message
+                        const inboundMessages = rows.filter(m => 
+                            String(m.messageDirection || "").toLowerCase() === "inbound" && m.createdOn
+                        );
+                        
+                        if (inboundMessages.length > 0) {
+                            // Get the most recent inbound message (assuming array is sorted by time)
+                            const lastInboundMessage = inboundMessages[inboundMessages.length - 1];
+                            const createdOn = lastInboundMessage.createdOn || "";
+                            
+                            // Parse the full date "26-Jan-2026 05:12:18 PM"
+                            if (createdOn) {
+                                const [datePart, timePart] = createdOn.split(' ', 2);
+                                const timeFormatted = createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
+                                
+                                // Parse the date to compare with today
+                                const messageDate = new Date(datePart.replace(/-/g, ' '));
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0); // Reset time for date comparison
+                                messageDate.setHours(0, 0, 0, 0);
+                                
+                                const diffDays = Math.floor((today - messageDate) / (1000 * 60 * 60 * 24));
+                                
+                                let dayText;
+                                if (diffDays === 0) {
+                                    dayText = "today";
+                                } else if (diffDays === 1) {
+                                    dayText = "yesterday";
+                                } else if (diffDays === -1) {
+                                    dayText = "tomorrow";
+                                } else {
+                                    // Show the actual date for other days
+                                    dayText = `on ${datePart}`;
+                                }
+                                
+                                $("#lastSeenText").text(`last seen ${dayText} at ${timeFormatted}`);
+                            }
+                        }
+                    }
+                    
+                    render(rows);
+                },
+                error: function () {
+                    alert("Failed to load messages");
+                }
+            });
+        }
+
+        function sendMessage(text) {
+            return $.ajax({
+                url: POST_OUTBOUND_URL,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ to: TO_NUMBER, body: text })
+            });
+        }
+
+        // ===== EVENTS =====
+        $("#btnRefresh").on("click", loadMessages);
+
+        $("#sendBtn").on("click", function () {
+            const text = $("#msgInput").val().trim();
+            if (!text) return;
+            sendMessage(text).done(function () {
+                $("#msgInput").val("");
+                // Reload messages from API after successful send
+                loadMessages();
+            }).fail(function () {
+                alert("Failed to send message");
+            });
+        });
+
+        $("#msgInput").on("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                $("#sendBtn").click();
+            }
+        });
+
+        // Close dropdown with Escape key
+        $(document).on("keydown", function (e) {
+            if (e.key === "Escape") {
+                $("#dropdownMenu").removeClass("show");
+            }
+        });
+
+        // ===== INIT =====
+        $(function () {
+            $("#custPhone").text(TO_NUMBER);
+            loadMessages();
+            
+            // Auto-refresh messages every second
+            setInterval(loadMessages, 1000);
+        });
+    </script>
+</body>
+
+</html>
