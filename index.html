@@ -619,7 +619,8 @@
         }
 
         // ===== CONFIG =====
-        const BASE_URL = "https://jnodeapi-staging.jagota.com";
+        const BASE_URL = "https://jnodeapi.jagota.com";
+        const BEARER_TOKEN = "ZKp9XWQ4h7A2mE8sF0YcD6LJ5BfR3Vn1CqH9tUeMKa0dP4iG8oS2x";
 
         // Extract phone number from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
@@ -627,8 +628,8 @@
 
         let CUSTOMER_NAME = ""; // Will be set dynamically from API response
 
-        const POST_OUTBOUND_URL = `${BASE_URL}/v1/public/whatsapp/outbound`;
-        const GET_MESSAGES_URL = `${BASE_URL}/v1/public/whatsapp/chat?mobile=${TO_NUMBER}`;
+        const POST_OUTBOUND_URL = `${BASE_URL}/v1/whatsapp/outbound`;
+        const GET_MESSAGES_URL = `${BASE_URL}/v1/whatsapp/chat?mobile=${TO_NUMBER}`;
 
 
         // ===== HELPERS =====
@@ -757,6 +758,9 @@
             $.ajax({
                 url: GET_MESSAGES_URL,
                 method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${BEARER_TOKEN}`
+                },
                 dataType: "json",
                 success: function (resp) {
                     const rows = resp.data || resp.result || resp || [];
@@ -844,6 +848,9 @@
             return $.ajax({
                 url: POST_OUTBOUND_URL,
                 method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${BEARER_TOKEN}`
+                },
                 contentType: "application/json",
                 data: JSON.stringify({ to: TO_NUMBER, body: text })
             });
