@@ -742,7 +742,7 @@
             });
 
             // Update message count in sidebar
-            $(".unread-count").text(rows.length);
+            //$(".unread-count").text(rows.length);
             $body.scrollTop($body[0].scrollHeight);
         }
 
@@ -782,11 +782,11 @@
                         <div class="avatar">${firstLetter}</div>
                         <div class="contact-info">
                             <div class="contact-name">${esc(contact.contact)}</div>
-                            <div class="contact-last-message">supCode: ${esc(contact.supCode)}</div>
+                            <div class="contact-last-message">Sup code: ${esc(contact.supCode)}</div>
                         </div>
                         <div class="contact-meta">
                             <div class="contact-time"></div>
-                            <div class="unread-count" style="display: none;">0</div>
+                            <div class="unread-count">${esc(contact.msgCount)}</div>
                         </div>
                     </div>
                 `);
