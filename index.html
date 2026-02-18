@@ -208,6 +208,8 @@
             display: flex;
             flex-direction: column;
             background: var(--panel);
+            position: relative;
+            overflow: hidden;
         }
 
         /* Chat Header */
@@ -443,6 +445,114 @@
             font-size: 9px;
         }
 
+        /* Contact Profile Panel */
+        .contact-profile {
+            position: absolute;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100%;
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-profile.show {
+            right: 0;
+        }
+
+        .profile-header {
+            background: var(--header);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .profile-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--muted);
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .profile-close:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .profile-status {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .profile-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .profile-section {
+            margin-bottom: 32px;
+        }
+
+        .profile-section-title {
+            font-size: 14px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .profile-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .profile-item-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .profile-item-value {
+            font-size: 16px;
+            color: var(--text);
+            word-break: break-all;
+        }
+
         /* Composer */
         .composer {
             padding: 10px;
@@ -575,6 +685,39 @@
                 </div>
                 <button class="btn primary" id="sendBtn">➤</button>
             </div>
+
+            <!-- Contact Profile Panel -->
+            <div class="contact-profile" id="contactProfile">
+                <div class="profile-header">
+                    <div class="profile-close" id="profileClose">✕</div>
+                    <div class="profile-avatar" id="profileAvatar"></div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName"></div>
+                        <div class="profile-status" id="profileStatus"></div>
+                    </div>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-section">
+                        <div class="profile-section-title">Contact Info</div>
+                        <div class="profile-item">
+                            <div class="profile-item-label">Name</div>
+                            <div class="profile-item-value" id="profileContactName"></div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-item-label">Phone</div>
+                            <div class="profile-item-value" id="profilePhone"></div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-item-label">Supplier Code</div>
+                            <div class="profile-item-value" id="profileSupCode"></div>
+                        </div>
+                        <div class="profile-item">
+                            <div class="profile-item-label">Last Seen</div>
+                            <div class="profile-item-value" id="profileLastSeen"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -585,11 +728,6 @@
                 e.stopPropagation();
                 $('#dropdownMenu').toggleClass('show');
                 console.log('Menu clicked, dropdown toggled');
-            });
-
-            // Close dropdown when clicking outside
-            $(document).on('click', function () {
-                $('#dropdownMenu').removeClass('show');
             });
 
             // Prevent dropdown from closing when clicking inside
@@ -939,6 +1077,31 @@
             });
         }
 
+        // ===== CONTACT PROFILE FUNCTIONALITY =====
+        function showContactProfile() {
+            if (!SELECTED_CONTACT) return;
+            
+            // Populate profile panel with contact information
+            const firstLetter = SELECTED_CONTACT.contact.charAt(0).toUpperCase();
+            $("#profileAvatar").text(firstLetter);
+            $("#profileName").text(SELECTED_CONTACT.contact);
+            $("#profileContactName").text(SELECTED_CONTACT.contact);
+            $("#profilePhone").text('+' + SELECTED_CONTACT.mobile);
+            $("#profileSupCode").text(SELECTED_CONTACT.supCode || 'N/A');
+            
+            // Get last seen from the current display
+            const lastSeenText = $("#lastSeenText").text() || 'Unknown';
+            $("#profileLastSeen").text(lastSeenText);
+            $("#profileStatus").text(lastSeenText);
+            
+            // Show profile panel
+            $("#contactProfile").addClass('show');
+        }
+        
+        function hideContactProfile() {
+            $("#contactProfile").removeClass('show');
+        }
+
         // ===== SEARCH FUNCTIONALITY =====
         function searchContacts(searchTerm) {
             if (!searchTerm || searchTerm.trim() === '') {
@@ -961,6 +1124,42 @@
         $("#searchInput").on("input keyup", function() {
             const searchTerm = $(this).val();
             searchContacts(searchTerm);
+        });
+
+        // Contact header click to show profile
+        $(document).on('click', '.contact-header', function() {
+            showContactProfile();
+        });
+        
+        // Profile close button
+        $("#profileClose").on("click", function() {
+            hideContactProfile();
+        });
+        
+        // Close profile when clicking outside
+        $(document).on("click", function(e) {
+            // Check if click is outside the contact profile panel and not on the contact header
+            if (!$(e.target).closest('#contactProfile, .contact-header').length) {
+                hideContactProfile();
+            }
+            
+            // Also close dropdown menu when clicking outside
+            if (!$(e.target).closest('#dropdownMenu, #menuBtn').length) {
+                $("#dropdownMenu").removeClass("show");
+            }
+        });
+        
+        // Prevent profile panel from closing when clicking inside it
+        $("#contactProfile").on("click", function(e) {
+            e.stopPropagation();
+        });
+        
+        // Close profile with Escape key
+        $(document).on("keydown", function (e) {
+            if (e.key === "Escape") {
+                $("#dropdownMenu").removeClass("show");
+                hideContactProfile();
+            }
         });
 
         $("#btnRefresh").on("click", function() {
@@ -989,12 +1188,7 @@
             }
         });
 
-        // Close dropdown with Escape key
-        $(document).on("keydown", function (e) {
-            if (e.key === "Escape") {
-                $("#dropdownMenu").removeClass("show");
-            }
-        });
+        // Note: Escape key handler moved up with profile functionality
 
         // ===== INIT =====
         $(function () {
