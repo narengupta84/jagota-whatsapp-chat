@@ -553,6 +553,83 @@
             word-break: break-all;
         }
 
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 16px;
+            z-index: 1001;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            font-size: 18px;
+            backdrop-filter: blur(10px);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-nav:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .hamburger {
+            width: 18px;
+            height: 12px;
+            position: relative;
+            transform: rotate(0deg);
+            transition: .3s ease-in-out;
+        }
+
+        .hamburger span {
+            display: block;
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: var(--text);
+            border-radius: 1px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: .2s ease-in-out;
+        }
+
+        .hamburger span:nth-child(1) {
+            top: 0px;
+        }
+
+        .hamburger span:nth-child(2) {
+            top: 5px;
+        }
+
+        .hamburger span:nth-child(3) {
+            top: 10px;
+        }
+
+        .mobile-back {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 16px;
+            z-index: 1001;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            font-size: 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-back:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
         /* Composer */
         .composer {
             padding: 10px;
@@ -597,19 +674,109 @@
             }
 
             .sidebar {
-                display: none;
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                z-index: 999;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.show {
+                left: 0;
             }
 
             .chat-panel {
                 flex: 1;
+                width: 100%;
+            }
+
+            .mobile-nav {
+                display: block;
+            }
+
+            .mobile-back {
+                display: none;
+            }
+
+            .topbar {
+                padding: 10px 50px 10px 16px;
+            }
+
+            .contact-header {
+                padding-left: 0;
             }
 
             .bubble {
                 max-width: 85%;
             }
 
-            .topbar {
-                padding: 10px 16px;
+            .composer {
+                display: flex !important;
+                padding: 12px 16px;
+            }
+
+            /* Mobile Profile Panel - Full Screen */
+            .contact-profile {
+                width: 100%;
+                right: -100%;
+            }
+
+            .contact-profile.show {
+                right: 0;
+            }
+
+            .profile-header {
+                padding: 60px 20px 20px 20px;
+                position: relative;
+            }
+
+            .mobile-back.show {
+                display: block;
+            }
+
+            /* Improve touch targets */
+            .contact-item {
+                padding: 16px;
+                min-height: 72px;
+            }
+
+            .icon {
+                padding: 12px;
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .btn {
+                padding: 12px 16px;
+                min-height: 44px;
+            }
+
+            .search-input {
+                padding: 12px 16px;
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+
+            .input input {
+                font-size: 16px; /* Prevent zoom on iOS */
+                padding: 12px 0;
+            }
+
+            /* Avatar sizes */
+            .avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+
+            .contact-header .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
             }
         }
 
@@ -619,9 +786,33 @@
             }
 
             .contact-header .avatar {
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 font-size: 14px;
+            }
+
+            .topbar {
+                padding: 8px 44px 8px 12px;
+            }
+
+            .name {
+                font-size: 15px;
+            }
+
+            .sub {
+                font-size: 12px;
+            }
+
+            .profile-item-value {
+                font-size: 15px;
+            }
+
+            .contact-name {
+                font-size: 15px;
+            }
+
+            .contact-last-message {
+                font-size: 13px;
             }
         }
     </style>
@@ -653,13 +844,23 @@
 
         <!-- Chat Panel -->
         <div class="chat-panel">
+            <!-- Mobile Navigation -->
+            <div class="mobile-nav" id="mobileNav">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <div class="mobile-back" id="mobileBack">←</div>
+            
             <div class="topbar">
                 <div class="contact-header">
                     <div class="avatar" id="headerAvatar"></div>
                     <div class="who">
                         <div class="name" id="custName"></div>
                         <div class="sub">
-                            <span id="lastSeenText">last seen today at 12:25</span>
+                            <span id="lastSeenText"></span>
                         </div>
                     </div>
                 </div>
@@ -679,7 +880,7 @@
 
             <div class="body" id="chatBody"></div>
 
-            <div class="composer" style="display: none;">
+            <div class="composer" style="display:none;">
                 <div class="input">
                     <input id="msgInput" type="text" placeholder="Type a message" />
                 </div>
@@ -963,6 +1164,14 @@
             newUrl.searchParams.set('mobile', contact.mobile);
             window.history.pushState({ path: newUrl.href }, '', newUrl.href);
             
+            // Hide sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                hideSidebar();
+            }
+            
+            // Update mobile navigation
+            updateMobileNavigation();
+            
             // Load messages for selected contact
             loadMessages();
         }
@@ -1052,7 +1261,7 @@
                                     dayText = `on ${datePart}`;
                                 }
                                 
-                                $("#lastSeenText").text(`last seen ${dayText} at ${timeFormatted}`);
+                                $("#lastSeenText").text(`Last seen ${dayText} at ${timeFormatted}`);
                             }
                         }
                     }
@@ -1077,6 +1286,42 @@
             });
         }
 
+        // ===== MOBILE FUNCTIONALITY =====
+        function showSidebar() {
+            $('.sidebar').addClass('show');
+        }
+        
+        function hideSidebar() {
+            $('.sidebar').removeClass('show');
+        }
+        
+        function updateMobileNavigation() {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Show/hide appropriate navigation buttons
+                if ($('#contactProfile').hasClass('show')) {
+                    $('#mobileNav').hide();
+                    $('#mobileBack').addClass('show');
+                } else {
+                    $('#mobileNav').show();
+                    $('#mobileBack').removeClass('show');
+                }
+                
+                // Show composer when contact is selected
+                if (SELECTED_CONTACT) {
+                    $('.composer').hide();
+                } else {
+                    $('.composer').hide();
+                }
+            } else {
+                $('#mobileNav').hide();
+                $('#mobileBack').removeClass('show');
+                $('.composer').toggle(!!SELECTED_CONTACT);
+                $('.composer').hide();
+            }
+        }
+
         // ===== CONTACT PROFILE FUNCTIONALITY =====
         function showContactProfile() {
             if (!SELECTED_CONTACT) return;
@@ -1096,10 +1341,14 @@
             
             // Show profile panel
             $("#contactProfile").addClass('show');
+            
+            // Update mobile navigation
+            updateMobileNavigation();
         }
         
         function hideContactProfile() {
             $("#contactProfile").removeClass('show');
+            updateMobileNavigation();
         }
 
         // ===== SEARCH FUNCTIONALITY =====
@@ -1126,6 +1375,15 @@
             searchContacts(searchTerm);
         });
 
+        // Mobile navigation
+        $("#mobileNav").on("click", function() {
+            showSidebar();
+        });
+        
+        $("#mobileBack").on("click", function() {
+            hideContactProfile();
+        });
+
         // Contact header click to show profile
         $(document).on('click', '.contact-header', function() {
             showContactProfile();
@@ -1147,10 +1405,20 @@
             if (!$(e.target).closest('#dropdownMenu, #menuBtn').length) {
                 $("#dropdownMenu").removeClass("show");
             }
+            
+            // Close sidebar on mobile when clicking outside
+            if (window.innerWidth <= 768 && !$(e.target).closest('.sidebar, #mobileNav').length) {
+                hideSidebar();
+            }
         });
         
         // Prevent profile panel from closing when clicking inside it
         $("#contactProfile").on("click", function(e) {
+            e.stopPropagation();
+        });
+        
+        // Prevent sidebar from closing when clicking inside it
+        $(".sidebar").on("click", function(e) {
             e.stopPropagation();
         });
         
@@ -1159,6 +1427,19 @@
             if (e.key === "Escape") {
                 $("#dropdownMenu").removeClass("show");
                 hideContactProfile();
+                if (window.innerWidth <= 768) {
+                    hideSidebar();
+                }
+            }
+        });
+        
+        // Handle window resize
+        $(window).on('resize', function() {
+            updateMobileNavigation();
+            
+            if (window.innerWidth > 768) {
+                // Desktop mode - ensure sidebar is visible and positioned correctly
+                $('.sidebar').removeClass('show').css('left', '');
             }
         });
 
@@ -1206,6 +1487,9 @@
                     }
                 }, 500);
             }
+            
+            // Initialize mobile navigation
+            updateMobileNavigation();
             
             // Auto-refresh messages every 5 seconds (reduced frequency)
             setInterval(() => {
