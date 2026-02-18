@@ -880,12 +880,12 @@
 
             <div class="body" id="chatBody"></div>
 
-            <!--<div class="composer" style="display:none;">
+            <!-- <div class="composer" style="display:none;">
                 <div class="input">
                     <input id="msgInput" type="text" placeholder="Type a message" />
                 </div>
                 <button class="btn primary" id="sendBtn">➤</button>
-            </div>-->
+            </div> -->
 
             <!-- Contact Profile Panel -->
             <div class="contact-profile" id="contactProfile">
@@ -964,6 +964,36 @@
 
 
         // ===== HELPERS =====
+        // Function to format datetime string into "last seen" format
+        function formatLastSeen(createdOn) {
+            if (!createdOn) return "Unknown";
+            
+            const [datePart, timePart] = createdOn.split(' ', 2);
+            const timeFormatted = createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
+            
+            // Parse the date to compare with today
+            const messageDate = new Date(datePart.replace(/-/g, ' '));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time for date comparison
+            messageDate.setHours(0, 0, 0, 0);
+            
+            const diffDays = Math.floor((today - messageDate) / (1000 * 60 * 60 * 24));
+            
+            let dayText;
+            if (diffDays === 0) {
+                dayText = "today";
+            } else if (diffDays === 1) {
+                dayText = "yesterday";
+            } else if (diffDays === -1) {
+                dayText = "tomorrow";
+            } else {
+                // Show the actual date for other days
+                dayText = `${datePart}`;
+            }
+            
+            return `${dayText} at ${timeFormatted}`;
+        }
+
         $("#profileBtn").on("click", function () {
             $("#dropdownMenu").removeClass("show");
             $("#profileModal").addClass("show");
@@ -1129,7 +1159,7 @@
                             <div class="contact-last-message">Sup code: ${esc(contact.supCode)}</div>
                         </div>
                         <div class="contact-meta">
-                            <div class="contact-time"></div>
+                            <div class="contact-time">${formatLastSeen(contact.lastSeen)}</div>
                             <div class="unread-count">${esc(contact.msgCount)}</div>
                         </div>
                     </div>
@@ -1216,7 +1246,7 @@
                         if (mostRecentMessage.createdOn) {
                             const timeFormatted = mostRecentMessage.createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
                             if (timeFormatted) {
-                                $(`.contact-item[data-mobile="${SELECTED_CONTACT.mobile}"] .contact-time`).text(timeFormatted);
+                                //$(`.contact-item[data-mobile="${SELECTED_CONTACT.mobile}"] .contact-time`).text(timeFormatted);
                             }
                         }
                         
@@ -1236,33 +1266,9 @@
                             const lastInboundMessage = inboundMessages[inboundMessages.length - 1];
                             const createdOn = lastInboundMessage.createdOn || "";
                             
-                            // Parse the full date "26-Jan-2026 05:12:18 PM"
-                            if (createdOn) {
-                                const [datePart, timePart] = createdOn.split(' ', 2);
-                                const timeFormatted = createdOn.split(' ').slice(1, 3).join(' ').replace(/(\d{2}):(\d{2}):(\d{2})/, '$1:$2');
-                                
-                                // Parse the date to compare with today
-                                const messageDate = new Date(datePart.replace(/-/g, ' '));
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0); // Reset time for date comparison
-                                messageDate.setHours(0, 0, 0, 0);
-                                
-                                const diffDays = Math.floor((today - messageDate) / (1000 * 60 * 60 * 24));
-                                
-                                let dayText;
-                                if (diffDays === 0) {
-                                    dayText = "today";
-                                } else if (diffDays === 1) {
-                                    dayText = "yesterday";
-                                } else if (diffDays === -1) {
-                                    dayText = "tomorrow";
-                                } else {
-                                    // Show the actual date for other days
-                                    dayText = `on ${datePart}`;
-                                }
-                                
-                                $("#lastSeenText").text(`Last seen ${dayText} at ${timeFormatted}`);
-                            }
+                            // Use the formatLastSeen function to format the datetime
+                            const lastSeenText = formatLastSeen(createdOn);
+                            $("#lastSeenText").text('Last seen '+lastSeenText);
                         }
                     }
                     
